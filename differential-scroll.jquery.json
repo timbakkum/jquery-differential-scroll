@@ -1,0 +1,27 @@
+{
+  "name": "differential-scroll",
+  "title": "Differential Scroll",
+  "description": "jQuery differential scroll plugin.",
+  "version": "0.1.0",
+  "homepage": "https://github.com/Und3Rdo9/jquery-differential-scroll",
+  "author": {
+    "name": "Tim Bakkum",
+    "email": "info@timbakkum.net",
+    "url": "http://timbakkum.net"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Und3Rdo9/jquery-differential-scroll.git"
+  },
+  "bugs": "https://github.com/Und3Rdo9/jquery-differential-scroll/issues",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/Und3Rdo9/jquery-differential-scroll/blob/master/LICENSE-MIT"
+    }
+  ],
+  "dependencies": {
+    "jquery": "~1.7"
+  },
+  "keywords": []
+}

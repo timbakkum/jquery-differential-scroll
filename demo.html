@@ -4,29 +4,29 @@
 	<meta charset="UTF-8">
 	<title>Demo Differential Scroll</title>
 	<style>
-		.single-project{
-				position: relative;
-				overflow: hidden;
-				/* write proper css for demo */
-				/*
-				&__column{
-					@include breakpoint (medium){
-						float: left;
-						width: 50%;
-					}
-					&--images{
-						img{
-							width: 100%;
-							height: auto;
-						}
-					}
-				}*/
+		
+		.differential-scroll-container{
+			position: relative;
+			overflow: hidden;
+			
+		}
+
+		@media screen and (min-width: 40em){
+			.differential-scroll-column{
+				float:left;
+				width:50%;
 			}
+		}
+
+		img{
+			width:100%;
+			height:auto;
+		}
 	</style>
 </head>
 <body>
-	<div class="single-project differential-scroll-container">
-		<div class="single-project__column single-project__column--text differential-scroll-column">
+	<div class="differential-scroll-container" style="background:Khaki;">
+		<div class="differential-scroll-column" style="background:PapayaWhip">
 			<h1>Project Name</h1>
 			<p>Project subtitle</p>
 			<hr>
@@ -35,7 +35,7 @@
 			<p>Tags: Responsive Web Design, Accesibility</p>
 			<p><time>2016</time></p>
 			<hr>
-			<div class="single-project__description">
+			<div class="">
 			<div>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Deserunt reiciendis mollitia voluptate? Similique, pariatur sequi doloribus, quia rem nulla esse, animi omnis perferendis tenetur fugit inventore itaque temporibus magni adipisci.</div>
 			<div>Tempore corporis culpa quod hic voluptate debitis, facere modi id dignissimos dolor reprehenderit enim accusantium delectus cumque, soluta alias in amet repellat harum maxime! Quis voluptates cupiditate dolores beatae debitis.</div>
 			<div>Optio corporis ducimus aut, impedit eaque maxime qui, obcaecati nam saepe ipsa alias officia tempore veritatis minima unde fuga quae rem ad repudiandae aspernatur iure, provident vero voluptates dolores, libero!</div>
@@ -46,11 +46,16 @@
 			</div>
 
 		</div>
-		<div class="single-project__column single-project__column--images differential-scroll-column">
+		<div class="differential-scroll-column" style="background:Indigo">
 			<img src="http://placekitten.com/g/500/300" alt="">
 			<img src="http://placekitten.com/g/800/600" alt="">
 			<img src="http://placekitten.com/g/600/300" alt="">
 		</div>
 	</div>
+	<script src="bower_components/jquery/dist/jquery.min.js" type="text/javascript"></script>
+	<script src="src/jquery.differential-scroll.js" type="text/javascript"></script>
+	<script>
+		$('.differential-scroll-container').differentialScroll();
+	</script>
 </body>
 </html>

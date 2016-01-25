@@ -1,0 +1,27 @@
+{
+  "name": "jquery.differential-scroll",
+  "description": "a jQuery differential Scroll plugin",
+  "main": "dist/jquery.differential-scroll.js",
+  "authors": [
+    "Tim Bakkum"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "jquery",
+    "differential",
+    "scroll"
+  ],
+  "homepage": "https://github.com/Und3Rdo9/jquery-differential-scroll",
+  "moduleType": [],
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.2.0"
+  }
+}
