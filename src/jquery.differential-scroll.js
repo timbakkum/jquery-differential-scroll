@@ -86,6 +86,9 @@
                 });
             };
 
+            var unstyleColumns = function(){
+                settings.scrollContainer.find('.differential-scroll-column').removeAttr('style');
+            }
 
             var isLaunched = false;
 
@@ -142,7 +145,6 @@
             };
 
             var positionTallestColumn = function(){
-                tallestColumn.addClass('fixedToContainer');
                 tallestColumn.css({
                     'position'  : 'absolute',
                     'top'       : '0',
@@ -162,7 +164,7 @@
               
                 if(smallestColumn !== null){
                 // if columns are equal, behavoir not necessary !
-                // if tallest column isn't longer than the screen, behavouir not necessary
+                
                     smallestColumnHeight = smallestColumn.outerHeight();
                     tallestColumnHeight = tallestColumn.outerHeight();
                     scrollContainerTop = settings.scrollContainer.offset().top;
@@ -170,6 +172,7 @@
                     scrollContainerBottom = scrollContainerTop + tallestColumnHeight;
                     smallestColumnBottom = scrollContainerTop + smallestColumnHeight;
                     if(tallestColumnHeight > windowHeight){
+                    // if tallest column isn't longer than the screen, behavouir not necessary
                         styleContainer(); // give scrollContainer height of tallest column 
 
                         positionTallestColumn(); // always position tallest container, because its position doesn't need to change
@@ -249,6 +252,7 @@
                     if(isLaunched === true){
                     // undo some handlers etc
                     unstyleContainer();
+                    unstyleColumns();
                     $(window).off('scroll resize', evalScrollPosition);
                         isLaunched = false;
                     }
