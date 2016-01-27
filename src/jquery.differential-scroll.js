@@ -159,73 +159,75 @@
                 // function for evaluating position of scrollTop
                 windowTop = getWindowTop();
                 windowHeight = getWindowHeight();
-                smallestColumnHeight = smallestColumn.outerHeight();
-                tallestColumnHeight = tallestColumn.outerHeight();
-                scrollContainerTop = settings.scrollContainer.offset().top;
-
-                scrollContainerBottom = scrollContainerTop + tallestColumnHeight;
-                smallestColumnBottom = scrollContainerTop + smallestColumnHeight; 
-
-                styleContainer(); // give scrollContainer height of tallest column 
               
-                if(smallestColumn !== null && tallestColumnHeight > windowHeight){
+                if(smallestColumn !== null){
                 // if columns are equal, behavoir not necessary !
                 // if tallest column isn't longer than the screen, behavouir not necessary
+                    smallestColumnHeight = smallestColumn.outerHeight();
+                    tallestColumnHeight = tallestColumn.outerHeight();
+                    scrollContainerTop = settings.scrollContainer.offset().top;
 
-                    positionTallestColumn(); // always position tallest container, because its position doesn't need to change
+                    scrollContainerBottom = scrollContainerTop + tallestColumnHeight;
+                    smallestColumnBottom = scrollContainerTop + smallestColumnHeight;
+                    if(tallestColumnHeight > windowHeight){
+                        styleContainer(); // give scrollContainer height of tallest column 
 
-                    if (windowTop >= scrollContainerTop && windowTop <= scrollContainerBottom && windowTop < scrollContainerBottom - smallestColumnHeight){ 
-                    // if window scrolled past the top of the container but not past the bottom of container
-                      //  console.log('scrolled passed top of container - but not past bottom');
-                        //console.log(windowTop + ' <= ' + scrollContainerBottom);
-                        
-                        if(smallestColumnHeight <= windowHeight){
-                            // if the smallest column is smaller than or equal to the window height
-                            toggleFixTop();
+                        positionTallestColumn(); // always position tallest container, because its position doesn't need to change
 
-                            console.log('smallest column is smaller than or equal to the window height');
-                        }
-                        else if(smallestColumnHeight > windowHeight){
-                        // if the smallest column is larger than the window height,
-                        // wait until fixing the bottom of the column is visible,
-                        // then fix on the bottom of the window if bottom of scrollContainer is not yet visible
-                        // or position absolutely once the bottom of the scrollContainer is visible
-                            if(windowTop >= smallestColumnBottom - windowHeight) {
-                              //  console.log('wt = ' + windowTop + ' sct = ' + scrollContainerTop + ' sch = ' + smallestColumnHeight + ' wh = ' + windowHeight + ' scb = ' + smallestColumnBottom);
-                                if(windowTop >= scrollContainerBottom){
-                                    toggleFixBottom();
-                                   // console.log('fix on the bottom of the window if bottom of scrollContainer is not yet visible');
+                        if (windowTop >= scrollContainerTop && windowTop <= scrollContainerBottom && windowTop < scrollContainerBottom - smallestColumnHeight){ 
+                        // if window scrolled past the top of the container but not past the bottom of container
+                          //  console.log('scrolled passed top of container - but not past bottom');
+                            //console.log(windowTop + ' <= ' + scrollContainerBottom);
+
+                            if(smallestColumnHeight <= windowHeight){
+                                // if the smallest column is smaller than or equal to the window height
+                                toggleFixTop();
+
+                                console.log('smallest column is smaller than or equal to the window height');
+                            }
+                            else if(smallestColumnHeight > windowHeight){
+                            // if the smallest column is larger than the window height,
+                            // wait until fixing the bottom of the column is visible,
+                            // then fix on the bottom of the window if bottom of scrollContainer is not yet visible
+                            // or position absolutely once the bottom of the scrollContainer is visible
+                                if(windowTop >= smallestColumnBottom - windowHeight) {
+                                  //  console.log('wt = ' + windowTop + ' sct = ' + scrollContainerTop + ' sch = ' + smallestColumnHeight + ' wh = ' + windowHeight + ' scb = ' + smallestColumnBottom);
+                                    if(windowTop >= scrollContainerBottom){
+                                        toggleFixBottom();
+                                       // console.log('fix on the bottom of the window if bottom of scrollContainer is not yet visible');
+                                    }
+                                    else if(windowTop < scrollContainerBottom){
+                                        toggleFixMiddle();
+                                      //  console.log('position absolutely once the bottom of the scrollContainer is visible');
+                                    }
                                 }
-                                else if(windowTop < scrollContainerBottom){
-                                    toggleFixMiddle();
-                                  //  console.log('position absolutely once the bottom of the scrollContainer is visible');
+                                else if(windowTop < smallestColumnBottom - windowHeight) {
+                                   // console.log('toggling to fix container');
+
+                                    toggleFixContainer();
                                 }
                             }
-                            else if(windowTop < smallestColumnBottom - windowHeight) {
-                               // console.log('toggling to fix container');
+                        }
+                        else if(windowTop < scrollContainerTop ){
+                            toggleFixContainer();
+                            console.log('not scrolled passed top container / scrolled back up past top container = fix smallest to top absolutely')
+                        }
+                        else if(windowTop >= scrollContainerBottom - smallestColumnHeight && windowTop < scrollContainerBottom){
+                            // we scrolled to the point where the smallest container fits exaclty in the remaining visible space of the container
+                            // but we haven't scrolled past the container bottom
+                           // console.log(windowTop + ' >= ' + smallestColumnBottom + ' - ' + smallestColumnHeight);
+                            console.log('we scrolled to the point where the smallest container fits exaclty in the remaining visible space of the container \n but we haven\'t scrolled past the container bottom');
+                            toggleFixBottom();
+                        }
+                        else if(windowTop >= scrollContainerBottom){
+                            // we scrolled past the container bottom
+                            //console.log('we scrolled past the bottom of the container');
+                           // console.log(windowTop + ' > ' + scrollContainerBottom);
 
-                                toggleFixContainer();
-                            }
+                            // is this condition useful ??
                         }
                     }
-                    else if(windowTop < scrollContainerTop ){
-                        toggleFixContainer();
-                        console.log('not scrolled passed top container / scrolled back up past top container = fix smallest to top absolutely')
-                    }
-                    else if(windowTop >= scrollContainerBottom - smallestColumnHeight && windowTop < scrollContainerBottom){
-                        // we scrolled to the point where the smallest container fits exaclty in the remaining visible space of the container
-                        // but we haven't scrolled past the container bottom
-                       // console.log(windowTop + ' >= ' + smallestColumnBottom + ' - ' + smallestColumnHeight);
-                        console.log('we scrolled to the point where the smallest container fits exaclty in the remaining visible space of the container \n but we haven\'t scrolled past the container bottom');
-                        toggleFixBottom();
-                    }
-                    else if(windowTop >= scrollContainerBottom){
-                        // we scrolled past the container bottom
-                        //console.log('we scrolled past the bottom of the container');
-                       // console.log(windowTop + ' > ' + scrollContainerBottom);
-
-                        // is this condition useful ??
-                    }
+                    
                     
                 }
             };
