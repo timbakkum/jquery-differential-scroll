@@ -172,7 +172,7 @@
                     'bottom'    : '0',
                 }).css(this.smallestSide, 0);
 
-                console.log('toggleFixBottom');
+                console.log('toggleFixBottom container');
             }
         },
 
@@ -185,8 +185,18 @@
                     'bottom'    : 'auto',
                 }).css(this.smallestSide, 0);
                 
-                console.log('toggleFixContainer');
+                console.log('toggleFix top Container');
             }
+        },
+
+        fixToBottomScreen : function (){
+            this.fixedStatus = "middle";
+            this.$smallestColumn.css({
+                'position'  : 'absolute', // 'fixed',
+                'top'       : 'auto',
+                'bottom'    : ( ( this.$tallestColumn.outerHeight()- ( this.getWindowTop()  + this.getWindowHeight() - this.containerTop ) ) + 'px' ),
+            }).css(this.smallestSide, 0);
+            console.log('toggle fix to bottom screen');
         },
 
         positionTallestColumn : function(){
@@ -239,13 +249,14 @@
                     else if( 
                         this.windowTop > this.containerTop &&
                         this.windowTop < this.containerTop + (this.$tallestColumn.outerHeight() - this.$smallestColumn.outerHeight()) && 
-                        this.windowBottom < this.containerTop + this.$tallestColumn.outerHeight()
+                        this.windowTop < this.containerTop + this.$tallestColumn.outerHeight()
                     ){
                         /* - We scrolled past the top of the container
                          * - We haven't scrolled to the point where the smallest column
                          * fits exactly in the remaing visible container space
                          * - We haven't scrolled past the bottom of the container either
                          */
+                         //console.log(this.windowBottom + 'wb <' + this.containerTop  + 'ct ' + this.$tallestColumn.outerHeight() );
                         this.fixToTopScreen();
                     }
                     else if( 
