@@ -15,7 +15,7 @@ In your web page:
 <script src="dist/differential-scroll.min.js"></script>
 <script>
 jQuery(function($) {
-  $.awesome(); // "awesome"
+  $('.differential-scroll-container').differentialScroll(); 
 });
 </script>
 ```
