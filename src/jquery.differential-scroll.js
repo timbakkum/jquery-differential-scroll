@@ -326,7 +326,7 @@
         },
     };
 
-    $.fn.differentialScroll2 = function(options){
+    $.fn.differentialScroll = function(options){
         return this.each(function(){
             new DifferentialScroll(this, options).init();
         });
