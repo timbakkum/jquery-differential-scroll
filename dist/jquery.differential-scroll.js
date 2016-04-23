@@ -1,4 +1,4 @@
-/*! Differential Scroll - v0.1.0 - 2016-02-01
+/*! Differential Scroll - v0.1.0 - 2016-04-24
 * https://github.com/Und3Rdo9/jquery-differential-scroll
 * Copyright (c) 2016 Tim Bakkum; Licensed MIT */
 /* globals console */
@@ -56,25 +56,28 @@
         mediaQuery : window.matchMedia(defaults.breakpoint),
 
         mediaQueryCheck : function(mql){
+            
              if(mql.matches === true){ // if our mediaQuery matches
                 this.evalScrollPosition();
                 if(this.isLaunched === false){
                     // attach scroll handlers
 
-                    $(window).on('scroll resize', this.evalScrollPosition.bind(this));
+                    $(window).on('scroll.differentialScroll resize.differentialScroll', this.evalScrollPosition.bind(this));
                     this.isLaunched = true;
                 }
             }
             else if(mql.matches === false){ // if the mediaQuery isn't active atm
                 if(this.isLaunched === true){
                 // remove handlers
-                $(window).off('scroll resize', this.evalScrollPosition.bind(this));
+                    $(window).off('scroll.differentialScroll resize.differentialScroll');
                     this.isLaunched = false;
+                    
                 }
                 this.fixedStatus = '';
                 this.unstyleContainer(); // remove positioning set by plugin
                 this.unstyleColumns(); // remove positioning set by plugin
             }
+
         },
         
         init: function(){
@@ -82,13 +85,19 @@
             // merge user options with defaults 
             this.config = $.extend({}, defaults, this.options, this.metadata);
             // define mql object
+
             this.mediaQuery = window.matchMedia(this.config.breakpoint);
             
+             var thatMediaQuery = this.mediaQuery;
             // add listener to conditionally toggle scroll and resize listeners
-            this.mediaQuery.addListener(this.mediaQueryCheck);
+            this.mediaQuery.addListener( this.mediaQueryCheck.bind(this) );
             // check mediaQuery to determine whether to apply eventListeners 
+            
+            
             // and run for a first time
-            this.mediaQueryCheck(this.mediaQuery);
+            this.mediaQueryCheck(thatMediaQuery);
+            
+            
 
             return this;
         },
@@ -145,6 +154,7 @@
                 'right'     : 'auto',
                 'left'      : 'auto'
             });
+            
         },
 
         fixToTopScreen : function(){
@@ -155,7 +165,7 @@
                 'bottom'    : 'auto',
             }).css(this.smallestSide, 0);
 
-            console.log('toggleFixTop');
+           // console.log('toggleFixTop');
         },
 
         fixToBottomContainer : function(){
@@ -167,7 +177,7 @@
                     'bottom'    : '0',
                 }).css(this.smallestSide, 0);
 
-                console.log('toggleFixBottom container');
+              //  console.log('toggleFixBottom container');
             }
         },
 
@@ -180,7 +190,7 @@
                     'bottom'    : 'auto',
                 }).css(this.smallestSide, 0);
                 
-                console.log('toggleFix top Container');
+               // console.log('toggleFix top Container');
             }
         },
 
@@ -191,7 +201,7 @@
                 'top'       : 'auto',
                 'bottom'    : ( ( this.$tallestColumn.outerHeight()- ( this.getWindowTop()  + this.getWindowHeight() - this.containerTop ) ) + 'px' ),
             }).css(this.smallestSide, 0);
-            console.log('toggle fix to bottom screen');
+           // console.log('toggle fix to bottom screen');
         },
 
         positionTallestColumn : function(){
@@ -201,7 +211,7 @@
                 'bottom'    : 'auto',
             }).css(this.tallestSide, 0);
 
-            console.log('positionTallestColumn');
+           // console.log('positionTallestColumn');
         },
 
         evalScrollPosition : function(){
