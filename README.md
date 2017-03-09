@@ -20,11 +20,7 @@ jQuery(function($) {
 </script>
 ```
 
-## Documentation
-_(Coming soon)_
+## Documentation & Example
+Please find the latest documentation and demo page here: http://differential-scroll.timbakkum.net/
 
-## Examples
-_(Coming soon)_
 
-## Release History
-_(Nothing yet)_
