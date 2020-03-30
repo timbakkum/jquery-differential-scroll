@@ -1,6 +1,7 @@
 # Differential Scroll
 
-jQuery differential scroll plugin.
+jQuery differential scroll plugin. 
+Note: this has not been maintained for 4 years.
 
 ## Getting Started
 Download the [production version][min] or the [development version][max].
@@ -21,6 +22,6 @@ jQuery(function($) {
 ```
 
 ## Documentation & Example
-Please find the latest documentation and demo page here: http://differential-scroll.timbakkum.net/
+Please find the latest documentation and demo page here: https://naughty-fermat-2d01d8.netlify.com/
 
 
