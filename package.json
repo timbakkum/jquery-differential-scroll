@@ -7,6 +7,7 @@
   "scripts": {
     "test": "grunt qunit",
     "bower:install": "bower install",
+    "bundle": "parcel index.html --out-dir ./parcel-build",
     "serve": "http-server"
   },
   "devDependencies": {
@@ -20,6 +21,7 @@
     "http-server": "^0.12.1"
   },
   "dependencies": {
-    "bower": "^1.8.8"
+    "bower": "^1.8.8",
+    "jquery": "~2.2.0"
   }
 }

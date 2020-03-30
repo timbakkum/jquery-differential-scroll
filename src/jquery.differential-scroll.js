@@ -8,338 +8,363 @@
  */
 /* globals console */
 
-;(function($) {
+import jQuery from "jquery";
 
-    "use strict";
+(function($) {
+  "use strict";
 
-    // define default once
-    var defaults = {            
-        breakpoint :        '(min-width: 40em)', // breakpoint to activate at
-        offsetTop :         0, // extra offset from top to take into account (in case of fixed header for example)
-        offsetBottom :      0, // extra bottom offset to take into account (in case of fixed footer for example) // to-do : add this values in calculations 
+  // define default once
+  var defaults = {
+    breakpoint: "(min-width: 40em)", // breakpoint to activate at
+    offsetTop: 0, // extra offset from top to take into account (in case of fixed header for example)
+    offsetBottom: 0 // extra bottom offset to take into account (in case of fixed footer for example) // to-do : add this values in calculations
+  };
+
+  var DifferentialScroll = function(elem, options) {
+    this.elem = elem;
+    this.$container = $(elem);
+    this.options = options;
+    this.metadata = this.$container.data("differential-scroll-options");
+
+    this.$columns = this.$container.find(".differential-scroll-column");
+
+    this.$smallestColumn = null;
+    this.$tallestColumn = null;
+    this.smallestSide = "";
+    this.tallestSide = "";
+
+    this.isLaunched = false;
+    this.fixedStatus = "";
+
+    this.windowTop = "";
+    this.windowHeight = "";
+    this.windowBottom = "";
+
+    this.containerTop = "";
+
+    // utility functions
+    this.getWindowTop = function() {
+      return $(window).scrollTop();
     };
 
-    var DifferentialScroll = function(elem, options){
-        this.elem = elem;
-        this.$container = $(elem);
-        this.options = options;
-        this.metadata = this.$container.data('differential-scroll-options');
+    this.getWindowHeight = function() {
+      return $(window).height();
+    };
 
-        this.$columns = this.$container.find('.differential-scroll-column');
+    this.getWindowBottom = function() {
+      return this.getWindowTop() + this.getWindowHeight();
+    };
+  };
 
+  DifferentialScroll.prototype = {
+    version: "0.0.1",
+    mediaQuery: window.matchMedia(defaults.breakpoint),
+
+    mediaQueryCheck: function(mql) {
+      if (mql.matches === true) {
+        // if our mediaQuery matches
+        this.evalScrollPosition();
+        if (this.isLaunched === false) {
+          // attach scroll handlers
+
+          $(window).on(
+            "scroll.differentialScroll resize.differentialScroll",
+            this.evalScrollPosition.bind(this)
+          );
+          this.isLaunched = true;
+        }
+      } else if (mql.matches === false) {
+        // if the mediaQuery isn't active atm
+        if (this.isLaunched === true) {
+          // remove handlers
+          $(window).off("scroll.differentialScroll resize.differentialScroll");
+          this.isLaunched = false;
+        }
+        this.fixedStatus = "";
+        this.unstyleContainer(); // remove positioning set by plugin
+        this.unstyleColumns(); // remove positioning set by plugin
+      }
+    },
+
+    init: function() {
+      // merge user options with defaults
+      this.config = $.extend({}, defaults, this.options, this.metadata);
+      // define mql object
+
+      this.mediaQuery = window.matchMedia(this.config.breakpoint);
+
+      var thatMediaQuery = this.mediaQuery;
+      // add listener to conditionally toggle scroll and resize listeners
+      this.mediaQuery.addListener(this.mediaQueryCheck.bind(this));
+      // check mediaQuery to determine whether to apply eventListeners
+
+      // and run for a first time
+      this.mediaQueryCheck(thatMediaQuery);
+
+      return this;
+    },
+
+    evalColumns: function() {
+      if (this.$columns.length === 2) {
+        if (
+          this.$columns.first().outerHeight() <
+          this.$columns.last().outerHeight()
+        ) {
+          this.$smallestColumn = this.$columns.first();
+          this.$tallestColumn = this.$columns.last();
+          this.smallestSide = "left";
+          this.tallestSide = "right";
+        } else if (
+          this.$columns.first().outerHeight() >
+          this.$columns.last().outerHeight()
+        ) {
+          this.$smallestColumn = this.$columns.last();
+          this.$tallestColumn = this.$columns.first();
+          this.smallestSide = "right";
+          this.tallestSide = "left";
+        } else if (
+          this.$columns.first().outerHeight() ===
+          this.$columns.last().outerHeight()
+        ) {
+          // both columns have the same height: both columns can scroll at the same time!
+          this.$smallestColumn = null;
+          console.log(
+            "columns are the same height, no need to apply differential scroll effect"
+          );
+        }
+      } else {
         this.$smallestColumn = null;
-        this.$tallestColumn = null;
-        this.smallestSide   = '';
-        this.tallestSide    = '';
+        console.error("you must have two columns!");
+      }
+    },
 
-        this.isLaunched     = false;
-        this.fixedStatus    = '';
+    styleContainer: function() {
+      this.$container.css({
+        position: "relative",
+        overflow: "hidden",
+        height: this.$tallestColumn.outerHeight()
+      });
+    },
 
-        this.windowTop      = '';
-        this.windowHeight   = '';
-        this.windowBottom   = '';
+    unstyleContainer: function() {
+      this.$container.css({
+        position: "initial", // to-do : not sure if best way
+        overflow: "initial", // to-do : not sure if best way
+        height: "auto"
+      });
+    },
 
-        this.containerTop   = '';
+    unstyleColumns: function() {
+      this.$columns.css({
+        position: "relative",
+        top: "auto",
+        bottom: "auto",
+        right: "auto",
+        left: "auto"
+      });
+    },
 
-        // utility functions 
-        this.getWindowTop = function(){
-            return $(window).scrollTop();
-        };
+    fixToTopScreen: function() {
+      this.fixedStatus = "top-screen";
+      this.$smallestColumn
+        .css({
+          position: "absolute", // 'fixed',
+          top: this.getWindowTop() - this.containerTop + "px", //offset of scrollContainer to top - window scroll bottom
+          bottom: "auto"
+        })
+        .css(this.smallestSide, 0);
 
-        this.getWindowHeight = function(){
-            return $(window).height();
-        };
+      // console.log('toggleFixTop');
+    },
 
-        this.getWindowBottom = function(){
-            return this.getWindowTop() + this.getWindowHeight();
-        };
+    fixToBottomContainer: function() {
+      if (this.fixedStatus !== "bottom-container") {
+        // prevent from running multiple times if not necessary
+        this.fixedStatus = "bottom-container";
+        this.$smallestColumn
+          .css({
+            position: "absolute",
+            top: "auto",
+            bottom: "0"
+          })
+          .css(this.smallestSide, 0);
 
-    };
+        //  console.log('toggleFixBottom container');
+      }
+    },
 
-    DifferentialScroll.prototype = {
-        version :   '0.0.1',
-        mediaQuery : window.matchMedia(defaults.breakpoint),
+    fixToTopContainer: function() {
+      if (this.fixedStatus !== "top-container") {
+        // prevent from running multiple times if not necessary
+        this.fixedStatus = "top-container";
+        this.$smallestColumn
+          .css({
+            position: "absolute",
+            top: "0",
+            bottom: "auto"
+          })
+          .css(this.smallestSide, 0);
 
-        mediaQueryCheck : function(mql){
-            
-             if(mql.matches === true){ // if our mediaQuery matches
-                this.evalScrollPosition();
-                if(this.isLaunched === false){
-                    // attach scroll handlers
+        // console.log('toggleFix top Container');
+      }
+    },
 
-                    $(window).on('scroll.differentialScroll resize.differentialScroll', this.evalScrollPosition.bind(this));
-                    this.isLaunched = true;
-                }
-            }
-            else if(mql.matches === false){ // if the mediaQuery isn't active atm
-                if(this.isLaunched === true){
-                // remove handlers
-                    $(window).off('scroll.differentialScroll resize.differentialScroll');
-                    this.isLaunched = false;
-                    
-                }
-                this.fixedStatus = '';
-                this.unstyleContainer(); // remove positioning set by plugin
-                this.unstyleColumns(); // remove positioning set by plugin
-            }
+    fixToBottomScreen: function() {
+      this.fixedStatus = "middle";
+      this.$smallestColumn
+        .css({
+          position: "absolute", // 'fixed',
+          top: "auto",
+          bottom:
+            this.$tallestColumn.outerHeight() -
+            (this.getWindowTop() + this.getWindowHeight() - this.containerTop) +
+            "px"
+        })
+        .css(this.smallestSide, 0);
+      // console.log('toggle fix to bottom screen');
+    },
 
-        },
-        
-        init: function(){
-            
-            // merge user options with defaults 
-            this.config = $.extend({}, defaults, this.options, this.metadata);
-            // define mql object
+    positionTallestColumn: function() {
+      this.$tallestColumn
+        .css({
+          position: "absolute",
+          top: "0",
+          bottom: "auto"
+        })
+        .css(this.tallestSide, 0);
 
-            this.mediaQuery = window.matchMedia(this.config.breakpoint);
-            
-             var thatMediaQuery = this.mediaQuery;
-            // add listener to conditionally toggle scroll and resize listeners
-            this.mediaQuery.addListener( this.mediaQueryCheck.bind(this) );
-            // check mediaQuery to determine whether to apply eventListeners 
-            
-            
-            // and run for a first time
-            this.mediaQueryCheck(thatMediaQuery);
-            
-            
+      // console.log('positionTallestColumn');
+    },
 
-            return this;
-        },
+    evalScrollPosition: function() {
+      // Get info on columns to determine whether to go ahead or not
+      this.evalColumns();
 
-        evalColumns : function(){
-            if(this.$columns.length === 2){
-                if(this.$columns.first().outerHeight() < this.$columns.last().outerHeight()){
-                    this.$smallestColumn     = this.$columns.first();
-                    this.$tallestColumn      = this.$columns.last();
-                    this.smallestSide       = 'left';
-                    this.tallestSide        = 'right';
+      // Get window info once to reuse for comparisons
+      this.windowTop = this.getWindowTop();
+      this.windowHeight = this.getWindowHeight();
+      this.windowBottom = this.getWindowBottom();
 
-                }
-                else if(this.$columns.first().outerHeight() > this.$columns.last().outerHeight()){
-                    this.$smallestColumn     = this.$columns.last();
-                    this.$tallestColumn      = this.$columns.first();
-                    this.smallestSide       = 'right';
-                    this.tallestSide        = 'left';
-                }
-                else if(this.$columns.first().outerHeight() === this.$columns.last().outerHeight()){
-                    // both columns have the same height: both columns can scroll at the same time!
-                    this.$smallestColumn     = null;
-                    console.log('columns are the same height, no need to apply differential scroll effect');
-                }
-                
-            }
-            else{
-                this.$smallestColumn     = null;
-                console.error('you must have two columns!');
-            }
-        },
+      /* Check if smallest column is defined
+       * columns might have equal height
+       * or there might not be exactly 2 columns
+       * then check if tallest column is bigger than window
+       */
 
-        styleContainer : function(){
-            this.$container.css({
-                'position'  : 'relative',
-                'overflow'  : 'hidden',
-                'height'    : this.$tallestColumn.outerHeight(),
-            });
-        },
+      if (
+        this.$smallestColumn !== null &&
+        this.$tallestColumn.outerHeight() > this.windowHeight
+      ) {
+        this.styleContainer(); // apply neccesary styles to container
+        this.positionTallestColumn(); // position the tallest column absolutely
 
-        unstyleContainer : function(){
-            this.$container.css({
-                'position'  : 'initial', // to-do : not sure if best way
-                'overflow'  : 'initial', // to-do : not sure if best way
-                'height'    : 'auto',
-            });
-        },
+        this.containerTop = this.$container.offset().top;
+        //this.containerBottom= this.$container.offset().top
 
-        unstyleColumns : function(){
-            this.$columns.css({
-                'position'  : 'relative',
-                'top'       : 'auto',
-                'bottom'    : 'auto',
-                'right'     : 'auto',
-                'left'      : 'auto'
-            });
-            
-        },
+        if (this.$smallestColumn.outerHeight() <= this.windowHeight) {
+          /* Check if smallest column fits the screen
+           * adapt positioning based on scroll positioning
+           */
+          if (this.windowTop <= this.containerTop) {
+            /* We haven't scrolled past the top of the container
+             * or we have scrolled back up past the top of the container
+             */
 
-        fixToTopScreen : function(){
-            this.fixedStatus = "top-screen";
-            this.$smallestColumn.css({
-                'position'  : 'absolute', // 'fixed',
-                'top'       : ((this.getWindowTop() - this.containerTop) + 'px'), //offset of scrollContainer to top - window scroll bottom
-                'bottom'    : 'auto',
-            }).css(this.smallestSide, 0);
+            this.fixToTopContainer();
+          } else if (
+            this.windowTop > this.containerTop &&
+            this.windowTop <
+              this.containerTop +
+                (this.$tallestColumn.outerHeight() -
+                  this.$smallestColumn.outerHeight()) &&
+            this.windowTop <
+              this.containerTop + this.$tallestColumn.outerHeight()
+          ) {
+            /* - We scrolled past the top of the container
+             * - We haven't scrolled to the point where the smallest column
+             * fits exactly in the remaing visible container space
+             * - We haven't scrolled past the bottom of the container either
+             */
+            //console.log(this.windowBottom + 'wb <' + this.containerTop  + 'ct ' + this.$tallestColumn.outerHeight() );
+            this.fixToTopScreen();
+          } else if (
+            this.windowTop > this.containerTop &&
+            this.windowTop >=
+              this.containerTop +
+                (this.$tallestColumn.outerHeight() -
+                  this.$smallestColumn.outerHeight()) &&
+            this.windowBottom <
+              this.containerTop + this.$tallestColumn.outerHeight()
+          ) {
+            /* - We scrolled past the top of the container
+             * - We scrolled to the point where the smallest column
+             * fits exactly in the remaing visible container space
+             * - We haven't scrolled past the bottom of the container either
+             */
+            this.fixToBottomContainer();
+          } else if (
+            this.windowTop > this.containerTop &&
+            this.windowBottom >=
+              this.containerTop + this.$tallestColumn.outerHeight()
+          ) {
+            /* - We scrolled past the top of the container
+             * - We scrolled past the bottom the container
+             * (container is not visible on screen anymore)
+             */
 
-           // console.log('toggleFixTop');
-        },
+            this.fixToBottomContainer();
+          }
+        } else if (this.$smallestColumn.outerHeight() > this.windowHeight) {
+          /* Check if smallest column is bigger than the screen height
+           * adapt positioning based on scroll positioning
+           */
+          if (this.windowTop <= this.containerTop) {
+            /* We haven't scrolled past the top of the container
+             * or we have scrolled back up past the top of the container
+             */
 
-        fixToBottomContainer : function(){
-            if(this.fixedStatus !== "bottom-container"){ // prevent from running multiple times if not necessary
-                this.fixedStatus = "bottom-container";
-                this.$smallestColumn.css({
-                    'position'  : 'absolute',
-                    'top'       : 'auto',
-                    'bottom'    : '0',
-                }).css(this.smallestSide, 0);
+            this.fixToTopContainer();
+          } else if (
+            this.windowTop > this.containerTop &&
+            this.windowBottom >=
+              this.containerTop + this.$smallestColumn.outerHeight() &&
+            this.windowBottom <
+              this.containerTop + this.$tallestColumn.outerHeight()
+          ) {
+            /* - We scrolled past the top of the container
+             * - We scrolled to/past the point where we can see the bottom of the smallest column
+             * - We haven't scrolled past the bottom of the container
+             */
+            this.fixToBottomScreen();
+          } else if (
+            this.windowTop > this.containerTop &&
+            this.windowBottom >=
+              this.containerTop + this.$tallestColumn.outerHeight()
+          ) {
+            /* - We scrolled past the top of the container
+             * - We scrolled past the bottom the container
+             * (container is not visible on screen anymore)
+             */
 
-              //  console.log('toggleFixBottom container');
-            }
-        },
+            this.fixToBottomContainer();
+          }
+        }
+      } else {
+        // differential scroll behaviour not necessary
+        // removes styles just in case they were previously set
+        this.unstyleColumns();
+        this.unstyleContainer();
+      }
+    }
+  };
 
-        fixToTopContainer : function(){
-            if(this.fixedStatus !== "top-container"){ // prevent from running multiple times if not necessary
-                this.fixedStatus = "top-container";
-                this.$smallestColumn.css({
-                    'position'  : 'absolute',
-                    'top'       : '0',
-                    'bottom'    : 'auto',
-                }).css(this.smallestSide, 0);
-                
-               // console.log('toggleFix top Container');
-            }
-        },
+  $.fn.differentialScroll = function(options) {
+    return this.each(function() {
+      new DifferentialScroll(this, options).init();
+    });
+  };
 
-        fixToBottomScreen : function (){
-            this.fixedStatus = "middle";
-            this.$smallestColumn.css({
-                'position'  : 'absolute', // 'fixed',
-                'top'       : 'auto',
-                'bottom'    : ( ( this.$tallestColumn.outerHeight()- ( this.getWindowTop()  + this.getWindowHeight() - this.containerTop ) ) + 'px' ),
-            }).css(this.smallestSide, 0);
-           // console.log('toggle fix to bottom screen');
-        },
-
-        positionTallestColumn : function(){
-            this.$tallestColumn.css({
-                'position'  : 'absolute',
-                'top'       : '0',
-                'bottom'    : 'auto',
-            }).css(this.tallestSide, 0);
-
-           // console.log('positionTallestColumn');
-        },
-
-        evalScrollPosition : function(){
-
-            // Get info on columns to determine whether to go ahead or not
-            this.evalColumns();
-
-            // Get window info once to reuse for comparisons
-            this.windowTop      = this.getWindowTop();
-            this.windowHeight   = this.getWindowHeight();
-            this.windowBottom   = this.getWindowBottom();
-
-
-            /* Check if smallest column is defined
-             * columns might have equal height
-             * or there might not be exactly 2 columns
-             * then check if tallest column is bigger than window
-             */ 
-            if(this.$smallestColumn !== null && this.$tallestColumn.outerHeight() > this.windowHeight){
-
-                    this.styleContainer();          // apply neccesary styles to container
-                    this.positionTallestColumn();   // position the tallest column absolutely
-
-
-                    this.containerTop   = this.$container.offset().top;
-                    //this.containerBottom= this.$container.offset().top
-
-                if(this.$smallestColumn.outerHeight() <= this.windowHeight){
-                    /* Check if smallest column fits the screen
-                     * adapt positioning based on scroll positioning
-                     */
-                    if(
-                        this.windowTop <= this.containerTop
-                    ){
-                        /* We haven't scrolled past the top of the container 
-                         * or we have scrolled back up past the top of the container
-                         */ 
-                        this.fixToTopContainer();
-                    }
-                    else if( 
-                        this.windowTop > this.containerTop &&
-                        this.windowTop < this.containerTop + (this.$tallestColumn.outerHeight() - this.$smallestColumn.outerHeight()) && 
-                        this.windowTop < this.containerTop + this.$tallestColumn.outerHeight()
-                    ){
-                        /* - We scrolled past the top of the container
-                         * - We haven't scrolled to the point where the smallest column
-                         * fits exactly in the remaing visible container space
-                         * - We haven't scrolled past the bottom of the container either
-                         */
-                         //console.log(this.windowBottom + 'wb <' + this.containerTop  + 'ct ' + this.$tallestColumn.outerHeight() );
-                        this.fixToTopScreen();
-                    }
-                    else if( 
-                        this.windowTop > this.containerTop &&
-                        this.windowTop >= this.containerTop + (this.$tallestColumn.outerHeight() - this.$smallestColumn.outerHeight()) && 
-                        this.windowBottom < this.containerTop + this.$tallestColumn.outerHeight()
-                    ){
-                        /* - We scrolled past the top of the container
-                         * - We scrolled to the point where the smallest column
-                         * fits exactly in the remaing visible container space
-                         * - We haven't scrolled past the bottom of the container either
-                         */
-                        this.fixToBottomContainer();
-                    }
-                    else if(
-                        this.windowTop > this.containerTop &&
-                        this.windowBottom >= this.containerTop + this.$tallestColumn.outerHeight()
-                    ){
-                        /* - We scrolled past the top of the container
-                         * - We scrolled past the bottom the container 
-                         * (container is not visible on screen anymore)
-                         */ 
-                        this.fixToBottomContainer(); 
-                    }
-                }
-                else if (this.$smallestColumn.outerHeight() > this.windowHeight){
-                    /* Check if smallest column is bigger than the screen height
-                     * adapt positioning based on scroll positioning
-                     */
-                    if(
-                        this.windowTop <= this.containerTop
-                    ){
-                        /* We haven't scrolled past the top of the container 
-                         * or we have scrolled back up past the top of the container
-                         */ 
-                        this.fixToTopContainer();
-                    }
-                    else if( 
-                        this.windowTop > this.containerTop &&
-                        this.windowBottom >= this.containerTop + this.$smallestColumn.outerHeight()  &&
-                        this.windowBottom < this.containerTop + this.$tallestColumn.outerHeight()
-                    ){
-                        /* - We scrolled past the top of the container
-                         * - We scrolled to/past the point where we can see the bottom of the smallest column
-                         * - We haven't scrolled past the bottom of the container 
-                         */
-                        this.fixToBottomScreen();
-                    }
-                    else if(
-                        this.windowTop > this.containerTop &&
-                        this.windowBottom >= this.containerTop + this.$tallestColumn.outerHeight()
-                    ){
-                        /* - We scrolled past the top of the container
-                         * - We scrolled past the bottom the container 
-                         * (container is not visible on screen anymore)
-                         */ 
-                        this.fixToBottomContainer(); 
-                    }
-                }
-            }
-            else{
-                // differential scroll behaviour not necessary 
-                // removes styles just in case they were previously set
-                this.unstyleColumns();
-                this.unstyleContainer();
-            }
-        },
-    };
-
-    $.fn.differentialScroll = function(options){
-        return this.each(function(){
-            new DifferentialScroll(this, options).init();
-        });
-    };
-
-}(jQuery));
+  $(document).ready(function() {
+    var ds = $(".differential-scroll-container").differentialScroll();
+  });
+})(jQuery);
